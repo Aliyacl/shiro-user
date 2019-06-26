@@ -103,15 +103,25 @@
       modify_time = now()
     where dept_id = #{deptId,jdbcType=INTEGER}
   </update>
-  <select id="getDepts" resultMap="BaseResultMap">
+  <select id="getDepts" resultMap="BaseResultMap" parameterType="list">
     select
     <include refid="Base_Column_List"/>
     from dept
+    where dept_id in
+    <foreach collection="deptIds" index="index" item="item" open="(" separator="," close=")">
+      #{item}
+    </foreach>
   </select>
   <select id="getChildDept" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List"/>
     from dept
     where parent_id = #{deptId}
+  </select>
+  <select id="selectByDeptName" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from dept
+    where dept_name = #{deptName}
   </select>
 </mapper>

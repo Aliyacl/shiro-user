@@ -1,31 +1,17 @@
 package com.cl.shirouser.controller;
 
-import com.alibaba.fastjson.JSONArray;
 import com.cl.shirouser.common.ServerResponse;
-import com.cl.shirouser.dao.RoleMenuMapper;
 import com.cl.shirouser.entity.Role;
-import com.cl.shirouser.entity.User;
 import com.cl.shirouser.service.IRoleService;
-import com.cl.shirouser.service.IUserService;
-import com.cl.shirouser.util.DateTimeUtil;
-import com.cl.shirouser.util.ExcelUtil;
 import com.cl.shirouser.util.RedisUtil;
-import com.cl.shirouser.vo.UserVo;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.OutputStream;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -70,7 +56,7 @@ public class RoleController {
     public ServerResponse list(@RequestBody Role role) {
         logger.info("输入参数为：role：{}",role);
         Subject subject = SecurityUtils.getSubject();
-        if(subject.isPermitted("role:create")){
+        if(subject.isPermitted("role:add")){
             return roleService.add(role);
         }else{
             return ServerResponse.createByError("无权限");
@@ -101,7 +87,7 @@ public class RoleController {
         String roleIds = params.get("roleIds");
         logger.info("输入参数为：roleIds：{}",roleIds);
         Subject subject = SecurityUtils.getSubject();
-        if(subject.isPermitted("role:del")){
+        if(subject.isPermitted("role:delete")){
             return roleService.delete(roleIds);
         }else{
             return ServerResponse.createByError("无权限");
@@ -118,7 +104,7 @@ public class RoleController {
         String menuIds = params.get("menuIds");
         logger.info("输入参数为：roleId:{},menuIds:{}",roleId,menuIds);
         Subject subject = SecurityUtils.getSubject();
-        if(subject.isPermitted("role:list")){
+        if(subject.isPermitted("role:grant:menu")){
             return roleService.grantMenu(roleId,menuIds);
         }else{
             return ServerResponse.createByError("无权限");
@@ -135,7 +121,7 @@ public class RoleController {
         String operationIds = params.get("operationIds");
         logger.info("输入参数为：roleId:{},operationIds:{}",roleId,operationIds);
         Subject subject = SecurityUtils.getSubject();
-        if(subject.isPermitted("role:list")){
+        if(subject.isPermitted("role:grant:operator")){
             return roleService.grantOperation(roleId,operationIds);
         }else{
             return ServerResponse.createByError("无权限");
@@ -162,20 +148,55 @@ public class RoleController {
     }
 
     /*
-    收回角色下的权限
+    授权数据范围
      */
-    @PostMapping(value = "retrieve_menu.do")
+    @PostMapping(value = "grant_data_range.do")
     @ResponseBody
-    public ServerResponse retrieveMenu(@RequestBody Map<String,String> params) {
+    public ServerResponse grantDataRange(@RequestBody Map<String,String> params){
         Integer roleId = Integer.valueOf(params.get("roleId"));
-        String menuIds = params.get("menuIds");
-        logger.info("输入参数为：roleId:{},menuIds:{}",roleId,menuIds);
+        String deptIds = params.get("deptIds");
+        logger.info("输入参数为：roleId:{},deptIds:{}",roleId,deptIds);
         Subject subject = SecurityUtils.getSubject();
-        if(subject.isPermitted("role:list")){
-            return roleService.retrieveMenu(roleId,menuIds);
+        if(subject.isPermitted("role:grant:data")){
+            return roleService.grantDataRange(roleId,deptIds);
+        }else{
+            return ServerResponse.createByError("无权限");
+        }
+
+    }
+
+    /*
+    分配角色
+     */
+    @PostMapping(value = "grant_role.do")
+    @ResponseBody
+    public ServerResponse grantRole(@RequestBody Map<String,String> params) {
+        Integer roleId = Integer.valueOf(params.get("roleId"));
+        String userIds = params.get("userIds");
+        logger.info("输入参数为：roleId:{},userIds:{}",roleId,userIds);
+        Subject subject = SecurityUtils.getSubject();
+        if(subject.isPermitted("user:allocation")){
+            return roleService.grantRole(roleId,userIds);
         }else{
             return ServerResponse.createByError("无权限");
         }
     }
+
+//    /*
+//    收回角色下的权限
+//     */
+//    @PostMapping(value = "retrieve_menu.do")
+//    @ResponseBody
+//    public ServerResponse retrieveMenu(@RequestBody Map<String,String> params) {
+//        Integer roleId = Integer.valueOf(params.get("roleId"));
+//        String menuIds = params.get("menuIds");
+//        logger.info("输入参数为：roleId:{},menuIds:{}",roleId,menuIds);
+//        Subject subject = SecurityUtils.getSubject();
+//        if(subject.isPermitted("role:list")){
+//            return roleService.retrieveMenu(roleId,menuIds);
+//        }else{
+//            return ServerResponse.createByError("无权限");
+//        }
+//    }
 
 }

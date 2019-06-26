@@ -32,6 +32,6 @@
     select menu_id from role_menu where role_id =#{roleId}
   </select>
   <delete id="delete">
-    delete from role_menu where role_id =#{roleId} and menu_id =#{menuId}
+    delete from role_menu where role_id =#{roleId}
   </delete>
 </mapper>

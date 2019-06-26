@@ -6,9 +6,7 @@ import com.cl.shirouser.dao.DeptMapper;
 import com.cl.shirouser.dao.UserMapper;
 import com.cl.shirouser.dao.UserRoleMapper;
 import com.cl.shirouser.entity.Dept;
-import com.cl.shirouser.entity.RoleMenu;
 import com.cl.shirouser.entity.User;
-import com.cl.shirouser.entity.UserRole;
 import com.cl.shirouser.service.IUserService;
 import com.cl.shirouser.util.PasswordUtil;
 import com.cl.shirouser.util.RedisUtil;
@@ -16,7 +14,6 @@ import com.cl.shirouser.vo.UserVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.base.Splitter;
-import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +41,7 @@ public class UserServiceImpl implements IUserService {
         user.setStatus(0);
         int rowCount = userMapper.insert(user);
         if(rowCount>0){
-            return ServerResponse.createBySuccess("注册成功！");
+            return ServerResponse.createBySuccess("注册成功！",rowCount);
         }
         return ServerResponse.createByError();
     }
@@ -103,7 +100,7 @@ public class UserServiceImpl implements IUserService {
         user.setSalt(null);
         int rowCount = userMapper.updateByPrimaryKeySelective(user);
         if(rowCount>0){
-            return ServerResponse.createBySuccess();
+            return ServerResponse.createBySuccess(rowCount);
         }
         return ServerResponse.createByError();
     }
@@ -143,7 +140,7 @@ public class UserServiceImpl implements IUserService {
         }
         int rowCount = userMapper.deleteByUserIds(userIdList);
         if(rowCount>0){
-            return ServerResponse.createBySuccess();
+            return ServerResponse.createBySuccess(rowCount);
         }
         return ServerResponse.createByError();
     }
@@ -159,24 +156,6 @@ public class UserServiceImpl implements IUserService {
         return ServerResponse.createByError();
     }
 
-    public ServerResponse grantRole(Integer userId,String roleIds){
-        List<String> roleIdLists = Splitter.on(",").splitToList(roleIds);
-        List<Integer> roleIdList = roleIdLists.stream().map(Integer::parseInt).collect(Collectors.toList());
-        int i =0;
-        for(Integer r:roleIdList){
-            UserRole userRole = new UserRole();
-            userRole.setUserId(userId);
-            userRole.setRoleId(r);
-            int rowCount = userRoleMapper.insert(userRole);
-            if(rowCount>0){
-                i++;
-            }
-        }
-        if(i==roleIdList.size()){
-            return ServerResponse.createBySuccess();
-        }
-        return ServerResponse.createByError();
-    }
 
     public User getUserByUserName(String username){
         User user = userMapper.getUserByUserName(username);
@@ -187,6 +166,35 @@ public class UserServiceImpl implements IUserService {
         List<User> userList = userMapper.getUserByDeptId(deptId);
         return ServerResponse.createBySuccess(userList);
     }
+
+    public ServerResponse batchInsertOrUpdate(List<UserVo> userVoList){
+        int addRowCount=0,updateRowCount=0;
+        for(UserVo u:userVoList){
+            User user = new User();
+            user.setDeptId(deptMapper.selectByDeptName(u.getDept()).getDeptId());
+            user.setUsername(u.getUsername());
+            user.setEmail(u.getEmail());
+            if(u.getUserId()==null){
+                user.setPassword("123456");
+                ServerResponse serverResponse = this.register(user);
+                if(serverResponse.isSuccess()){
+                    addRowCount++;
+                }else{
+                    return  ServerResponse.createByError();
+                }
+            }else if(userMapper.selectByPrimaryKey(u.getUserId())!=null){
+                user.setUserId(u.getUserId());
+                ServerResponse serverResponse = this.edit(user);
+                if(serverResponse.isSuccess()){
+                    updateRowCount ++;
+                }else{
+                    return  ServerResponse.createByError();
+                }
+            }
+        }
+        return  ServerResponse.createBySuccess("新增"+addRowCount+"人，覆盖"+updateRowCount+"人");
+    }
+
 
 
 }

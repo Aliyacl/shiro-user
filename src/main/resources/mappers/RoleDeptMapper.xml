@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cl.shirouser.dao.RoleDeptMapper" >
+  <resultMap id="BaseResultMap" type="com.cl.shirouser.entity.RoleDept" >
+    <result column="role_id" property="roleId" jdbcType="INTEGER" />
+    <result column="dept_id" property="deptId" jdbcType="INTEGER" />
+  </resultMap>
+  <insert id="insert" parameterType="com.cl.shirouser.entity.RoleDept" >
+    insert into role_dept (role_id, dept_id)
+    values (#{roleId,jdbcType=INTEGER}, #{deptId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cl.shirouser.entity.RoleDept" >
+    insert into role_dept
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="roleId != null" >
+        role_id,
+      </if>
+      <if test="deptId != null" >
+        dept_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="roleId != null" >
+        #{roleId,jdbcType=INTEGER},
+      </if>
+      <if test="deptId != null" >
+        #{deptId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <select id="getDeptByRoleId" parameterType="int" resultType="int">
+    select dept_id from role_dept where role_id =#{roleId}
+  </select>
+  <delete id="delete">
+    delete from role_dept where role_id =#{roleId}
+  </delete>
+
+
+</mapper>

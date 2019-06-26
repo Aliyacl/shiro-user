@@ -1,6 +1,7 @@
 package com.cl.shirouser.entity;
 
 import java.util.Date;
+import java.util.List;
 
 public class User {
     private Integer userId;
@@ -24,6 +25,8 @@ public class User {
     private String activeCode;
 
     private Integer deptId;
+
+    private List<Integer> authDeptIds;
 
     public Integer getUserId() {
         return userId;
@@ -113,6 +116,14 @@ public class User {
         this.deptId = deptId;
     }
 
+    public List<Integer> getAuthDeptIds() {
+        return authDeptIds;
+    }
+
+    public void setAuthDeptIds(List<Integer> authDeptIds) {
+        this.authDeptIds = authDeptIds;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -127,6 +138,7 @@ public class User {
                 ", modifyTime=" + modifyTime +
                 ", activeCode='" + activeCode + '\'' +
                 ", deptId=" + deptId +
+                ", authDeptIds=" + authDeptIds +
                 '}';
     }
 }

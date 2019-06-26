@@ -1,6 +1,7 @@
 package com.cl.shirouser.dao;
 
 import com.cl.shirouser.entity.Dept;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,7 +20,9 @@ public interface DeptMapper {
 
     int updateByPrimaryKey(Dept record);
 
-    List<Dept> getDepts();
+    List<Dept> getDepts(@Param("deptIds") List<Integer> deptIds);
 
     List<Dept> getChildDept(Integer deptId);
+
+    Dept selectByDeptName(String deptName);
 }

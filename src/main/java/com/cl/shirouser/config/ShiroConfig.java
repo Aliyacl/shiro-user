@@ -42,6 +42,7 @@ public class ShiroConfig {
         //排除的页面（不被拦截的url或静态资源）
         filterRuleMap.put("/401*", "anon");
         filterRuleMap.put("/user/download*", "anon");
+        filterRuleMap.put("/test*", "anon");
         //注入shiro拦截器工厂类
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterRuleMap);
         return shiroFilterFactoryBean;

@@ -1,27 +1,21 @@
 package com.cl.shirouser.util;
 
 import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.omg.PortableInterceptor.INACTIVE;
-import sun.security.krb5.internal.tools.Klist;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ExcelUtil {
 
     /*
-    创建Excel并填充内容
-     */
+        创建Excel并填充内容
+         */
     public static HSSFWorkbook createExcel(Object object, List<? extends Object> objectList){
         //创建一个Excel文件
         HSSFWorkbook workbook = new HSSFWorkbook();
@@ -75,13 +69,13 @@ public class ExcelUtil {
      /*
     从Excel读取内容转为List
      */
-     public static List<T> readExcel(File file, Class<T> clazz){
+     public static <T>List<T> readExcel(InputStream inputStream, Class<T> clazz){
          //实例化对象集合
-         List<T> list = new ArrayList<>();
+         List<T> list = new ArrayList<T>();
 
          HSSFWorkbook workbook = null;
          try {
-             InputStream inputStream = new FileInputStream(file);
+             //InputStream inputStream = new FileInputStream(file);
              workbook = new HSSFWorkbook(inputStream);
              inputStream.close();
          } catch (Exception e) {
@@ -131,7 +125,12 @@ public class ExcelUtil {
                              continue;
                          }
                          //将单元的内容存入对象集合
-                         fieldList.get(cellNum).set(t,cell.getStringCellValue());
+                         //System.out.println(fieldList.get(cellNum).getType().toString());
+                         if(fieldList.get(cellNum).getType().toString().equals("class java.lang.Integer")){
+                             fieldList.get(cellNum).set(t,Integer.parseInt(cell.getStringCellValue()));
+                         }else{
+                             fieldList.get(cellNum).set(t,cell.getStringCellValue());
+                         }
                      }
                      list.add(t);
                  }catch (Exception e) {

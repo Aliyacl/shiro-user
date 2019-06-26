@@ -28,4 +28,10 @@
       </if>
     </trim>
   </insert>
+  <select id="getOperationByRoleId" parameterType="int" resultType="int">
+    select operator_id from role_operator where role_id =#{roleId}
+  </select>
+  <delete id="delete">
+    delete from role_operator where role_id =#{roleId}
+  </delete>
 </mapper>

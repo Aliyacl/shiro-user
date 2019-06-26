@@ -13,5 +13,5 @@ public interface RoleMenuMapper {
 
     List<Integer> getMenuByRoleId(int roleId);
 
-    int delete(RoleMenu record);
+    int delete(Integer roleId);
 }

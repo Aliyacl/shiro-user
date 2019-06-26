@@ -14,6 +14,7 @@ import com.github.pagehelper.PageInfo;
 import com.google.common.base.Splitter;
 import org.checkerframework.checker.signature.qual.BinaryNameForNonArrayInUnnamedPackage;
 import org.checkerframework.checker.units.qual.A;
+import org.omg.PortableInterceptor.INACTIVE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -37,6 +38,10 @@ public class RoleServiceImpl implements IRoleService {
     private MenuMapper menuMapper;
     @Autowired
     private OperatorMapper operatorMapper;
+    @Autowired
+    private RoleDeptMapper roleDeptMapper;
+    @Autowired
+    private UserRoleMapper userRoleMapper;
 
     public ServerResponse list(Role roleCondition, int pageNum, int pageSize){
         PageHelper.startPage(pageNum,pageSize);
@@ -74,32 +79,56 @@ public class RoleServiceImpl implements IRoleService {
     }
 
     public ServerResponse delete(String roleIds){
-        List<String> roleIdLists = Splitter.on(",").splitToList(roleIds);
-        List<Integer> roleIdList = roleIdLists.stream().map(Integer::parseInt).collect(Collectors.toList());
+        List<Integer> roleIdList = Splitter.on(",").splitToList(roleIds).stream().map(Integer::parseInt).collect(Collectors.toList());
         if(CollectionUtils.isEmpty(roleIdList)){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
         }
+        int i =0,j=0,k=0;
+        List<Integer> menuIds = new ArrayList<>();
+        List<Integer> operationIds = new ArrayList<>();
+        List<Integer> deptIds = new ArrayList<>();
         for(Integer r:roleIdList){
-            List<Integer> menuIds = roleMenuMapper.getMenuByRoleId(r);
+            menuIds = roleMenuMapper.getMenuByRoleId(r);
+            operationIds = roleOperatorMapper.getOperationByRoleId(r);
+            deptIds =  roleDeptMapper.getDeptByRoleId(r);
             if(menuIds!=null||menuIds.size()!=0){
-                String roleName = roleMapper.selectRoleNameByRoleId(r);
-                return ServerResponse.createBySuccess(roleName+"还有权限，请先删除其关联的权限");
+                int rowCount =  roleMenuMapper.delete(r);
+                if(rowCount>0){
+                    i+=rowCount;
+                }
+            }
+            if(operationIds!=null||operationIds.size()!=0){
+                int rowCount =  roleOperatorMapper.delete(r);
+                if(rowCount>0){
+                    j+=rowCount;
+                }
+            }
+            if(deptIds!=null||deptIds.size()!=0){
+                int rowCount =  roleDeptMapper.delete(r);
+                if(rowCount>0){
+                    k+=rowCount;
+                }
             }
         }
-        int rowCount = roleMapper.deleteByRoleIds(roleIdList);
-        if(rowCount>0){
-            return ServerResponse.createBySuccess();
+        if(menuIds.size()==i&&operationIds.size()==j&&deptIds.size()==k){
+            int rowCount = roleMapper.deleteByRoleIds(roleIdList);
+            if(rowCount>0){
+                return ServerResponse.createBySuccess();
+            }
         }
         return ServerResponse.createByError();
     }
 
-    public ServerResponse grantMenu(Integer userId,String menuIds){
-        List<String> menuIdLists = Splitter.on(",").splitToList(menuIds);
-        List<Integer> menuIdList = menuIdLists.stream().map(Integer::parseInt).collect(Collectors.toList());
+    public ServerResponse grantMenu(Integer roleId,String menuIds){
+        List<Integer> menuIdList = Splitter.on(",").splitToList(menuIds).stream().map(Integer::parseInt).collect(Collectors.toList());
         int i =0;
+        List<Integer> menuIdsOld = roleMenuMapper.getMenuByRoleId(roleId);
+        if(menuIdsOld!=null||menuIdsOld.size()!=0) {
+            roleMenuMapper.delete(roleId);
+        }
         for(Integer m:menuIdList){
             RoleMenu roleMenu = new RoleMenu();
-            roleMenu.setRoleId(userId);
+            roleMenu.setRoleId(roleId);
             roleMenu.setMenuId(m);
             int rowCount = roleMenuMapper.insert(roleMenu);
             if(rowCount>0){
@@ -118,9 +147,12 @@ public class RoleServiceImpl implements IRoleService {
     }
 
     public ServerResponse grantOperation(Integer roleId,String operationIds){
-        List<String> operationIdLists = Splitter.on(",").splitToList(operationIds);
-        List<Integer> operationIdList = operationIdLists.stream().map(Integer::parseInt).collect(Collectors.toList());
+        List<Integer> operationIdList = Splitter.on(",").splitToList(operationIds).stream().map(Integer::parseInt).collect(Collectors.toList());
         int i =0;
+        List<Integer> operationIdsOld = roleOperatorMapper.getOperationByRoleId(roleId);
+        if(operationIdsOld!=null||operationIdsOld.size()!=0) {
+            roleOperatorMapper.delete(roleId);
+        }
         for(Integer o:operationIdList){
             RoleOperator roleOperator = new RoleOperator();
             roleOperator.setRoleId(roleId);
@@ -141,23 +173,65 @@ public class RoleServiceImpl implements IRoleService {
         return ServerResponse.createBySuccess(operatorList);
     }
 
-    public ServerResponse retrieveMenu(Integer userId,String menuIds){
-        List<String> menuIdLists = Splitter.on(",").splitToList(menuIds);
-        List<Integer> menuIdList = menuIdLists.stream().map(Integer::parseInt).collect(Collectors.toList());
+    public ServerResponse grantDataRange(Integer roleId,String deptIds){
+        List<Integer> deptIdList =Splitter.on(",").splitToList(deptIds).stream().map(Integer::parseInt).collect(Collectors.toList());
         int i =0;
-        for(Integer m:menuIdList){
-            RoleMenu roleMenu = new RoleMenu();
-            roleMenu.setRoleId(userId);
-            roleMenu.setMenuId(m);
-            int rowCount = roleMenuMapper.delete(roleMenu);
+        List<Integer> deptIdsOld = roleDeptMapper.getDeptByRoleId(roleId);
+        if(deptIdsOld!=null||deptIdsOld.size()!=0) {
+            roleDeptMapper.delete(roleId);
+        }
+        for(Integer d:deptIdList){
+            RoleDept roleDept = new RoleDept();
+            roleDept.setRoleId(roleId);
+            roleDept.setDeptId(d);
+            int rowCount = roleDeptMapper.insert(roleDept);
             if(rowCount>0){
                 i++;
             }
         }
-        if(i==menuIdList.size()){
+        if(i==deptIdList.size()){
             return ServerResponse.createBySuccess();
         }
         return ServerResponse.createByError();
     }
+
+    public ServerResponse grantRole(Integer roleId,String userIds){
+        List<Integer> userIdList = Splitter.on(",").splitToList(userIds).stream().map(Integer::parseInt).collect(Collectors.toList());
+        int i =0;
+        for(Integer u:userIdList){
+            UserRole userRole = new UserRole();
+            userRole.setUserId(u);
+            userRole.setRoleId(roleId);
+            int rowCount = userRoleMapper.insert(userRole);
+            if(rowCount>0){
+                i++;
+            }
+        }
+        if(i==userIdList.size()){
+            return ServerResponse.createBySuccess();
+        }
+        return ServerResponse.createByError();
+    }
+
+
+
+//    public ServerResponse retrieveMenu(Integer userId,String menuIds){
+//        List<String> menuIdLists = Splitter.on(",").splitToList(menuIds);
+//        List<Integer> menuIdList = menuIdLists.stream().map(Integer::parseInt).collect(Collectors.toList());
+//        int i =0;
+//        for(Integer m:menuIdList){
+//            RoleMenu roleMenu = new RoleMenu();
+//            roleMenu.setRoleId(userId);
+//            roleMenu.setMenuId(m);
+//            int rowCount = roleMenuMapper.delete(roleMenu);
+//            if(rowCount>0){
+//                i++;
+//            }
+//        }
+//        if(i==menuIdList.size()){
+//            return ServerResponse.createBySuccess();
+//        }
+//        return ServerResponse.createByError();
+//    }
 
 }

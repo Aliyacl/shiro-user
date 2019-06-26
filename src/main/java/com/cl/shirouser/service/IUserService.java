@@ -18,8 +18,6 @@ public interface IUserService {
 
     ServerResponse resetPassword(Integer userId,String password);
 
-    ServerResponse grantRole(Integer userId,String roleIds);
-
     User getUserByUserName(String username);
 
     ServerResponse getUserByDeptId(Integer deptId);
@@ -27,4 +25,6 @@ public interface IUserService {
     ServerResponse deptUserlist(Integer deptId);
 
     ServerResponse setUserDept(String userIds,Integer deptId);
+
+    ServerResponse batchInsertOrUpdate(List<UserVo> userVoList);
 }
